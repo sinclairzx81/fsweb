@@ -1,6 +1,6 @@
 {
   "name": "fsweb",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "static http web server with live reload.",
   "main": "./src/index.js",
   "scripts": {

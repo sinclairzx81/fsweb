@@ -68,12 +68,22 @@ class Runtime extends events.EventEmitter implements IRuntime {
     switch(this.state) {
       case "pending":
         this.state   = "started"
+
+        //-------------------------------
+        // initialize servr
+        //-------------------------------
         this.server  = create_server({
           path: this.argument.path, 
           port: this.argument.port
         })
-        this.server.on("request", request => this.writer.write(`${request.method} ${request.url}\n`))
+        this.server.on("request", request => {
+          this.writer.write(`${request.method} ${request.url}\n`)
+        })
         this.server.start()
+        
+        //-------------------------------
+        // initialize watcher
+        //-------------------------------
         this.watcher = create_watcher (this.argument.path, this.argument.timeout)
         this.watcher.on("data",   () => {
           this.writer.info("[reload]")

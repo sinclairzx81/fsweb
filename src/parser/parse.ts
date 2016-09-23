@@ -28,9 +28,34 @@ THE SOFTWARE.
 
 /** fsweb argument. */
 export interface Argument {
+  /** the directory to watch / serve */
   path      : string,
+  /** the port to listen on */
   port      : number,
+  /** default timeout inbetween refresh */
   timeout   : number
+}
+
+/**
+ * validates if the input is a numeric string, and its within a numberic port range.
+ * @param {string} the input to test.
+ * @returns {boolean}
+ */
+function validate_port(input: string) : boolean {
+  let numeric = +input
+  if(numeric === NaN) 
+    return false
+  let test = parseInt(input)
+  return (test > 0 && test < 65536)
+}
+
+/**
+ * validates if the input is a string.
+ * @param {string} the input to test.
+ * @returns {boolean}
+ */
+function validate_path  (input: string) : boolean {
+  return typeof input === "string"
 }
 
 /*
@@ -46,6 +71,7 @@ function extract_input(argv: string[]) : string {
   return line
 }
 
+
 /**
  * resolves the paths from the given input string. If 
  * no paths is given, then resolve to cwd (denoted by ./)
@@ -53,12 +79,19 @@ function extract_input(argv: string[]) : string {
  * @returns {Result<string>} 
  */
 function extract_path(input: string) : string {
-  let split = input.split(" ")
-  if (split.length === 2) {
-    return split[0]
-  } else {
-    return "./"
+  let split = input.split(" ").map(n => n.trim()).filter(n => n.length > 0)
+  let path  = undefined
+  if(split.length === 0) {
+    path = "./"
   }
+  else if (split.length >= 1) {
+    if(validate_path(split[0])) {
+      path = split[0]
+    } else {
+      throw Error("invalid path")
+    }
+  }
+  return path
 }
 
 /**
@@ -70,19 +103,22 @@ function extract_port(input: string) : number {
   let split = input.split(" ").map(n => n.trim()).filter(n => n.length > 0)
   let port  = undefined
   if(split.length === 0) {
-    return 5000
+    port = "5000"
   }
   else if (split.length === 1) {
-    port = split[0]
-  } else if (split.length === 2) {
-    port = split[1]
+    if(validate_port(split[0])) {
+      port = split[0]
+    } else {
+      port = "5000"
+    }
   }
-  try {
-    port = parseInt(port)
-  } catch(e){
-    throw Error("invalid port")
-  }
-  return port
+  else if (split.length >= 2) {
+    if(validate_port(split[1])) {
+      port = split[1]
+    } else {
+      throw Error("invalid port")
+    }
+  } return parseInt(port)
 }
 
 /**

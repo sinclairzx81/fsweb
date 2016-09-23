@@ -42,7 +42,7 @@ window.addEventListener("load", function() {
     switch(signal) {
       case "established": console.log("signals: established");  break;
       case "reload"     : window.location.reload(); break;
-      case "ping"       : break;    
+      case "ping"       : break;  
       case "disconnect":
         console.log("signals: disconnected");
         setTimeout(function() {
@@ -59,7 +59,7 @@ window.addEventListener("load", function() {
    * @param {Function} the signal handler.
    * @returns {void}
    */
-  (function(handler) {
+  function connect(handler) {
     var xhr = new XMLHttpRequest();
     var idx = 0;
     xhr.addEventListener("readystatechange", function(event) {
@@ -74,7 +74,11 @@ window.addEventListener("load", function() {
     });
     xhr.open("GET", "/__signal", true); 
     xhr.send();
-  })(handler)
+  }
+  /**
+   * connect
+   */
+  connect(handler)
 })
 
 `

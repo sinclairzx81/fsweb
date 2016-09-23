@@ -34,6 +34,7 @@ import * as fs            from "fs"
 import * as http          from "http"
 import * as path          from "path"
 import * as sys           from "../sys/sys"
+import * as uuid          from "./uuid"
 import * as mime          from "./mime"
 import * as assets        from "./assets"
 
@@ -70,9 +71,12 @@ const resourceInfo = (path: string, callback: (info: ResourceInfo) => void) => {
 
 /** interface for request events. */
 export interface RequestEvent {
+  /** the url being requested */
   url    : string
+  /** the http verb  */
   method : string
 }
+
 /** server initialization options. */
 export interface IServerOptions {
   path : string
@@ -93,7 +97,7 @@ export interface IServer {
 class Server extends  events.EventEmitter implements IServer {
   private state       : "pending" | "started" | "stopped"
   private server      : http.Server
-  private clients     : Array<http.ServerResponse>
+  private clients     : {[id: string]: http.ServerResponse}
   private ping_handle : NodeJS.Timer
 
   /**
@@ -105,7 +109,7 @@ class Server extends  events.EventEmitter implements IServer {
     super()
     this.state       = "pending"
     this.server      = undefined
-    this.clients     = []
+    this.clients     = {}
     this.ping_handle = undefined
   }
 
@@ -135,12 +139,15 @@ class Server extends  events.EventEmitter implements IServer {
   public reload(): void {
     switch(this.state) {
       case "started":
-        this.clients.forEach(client => client.write("reload")); 
+        Object.keys(this.clients).forEach(key => {
+          this.clients[key].write("reload"); 
+        })
         break;
       default: 
       break;
     }
   }
+  
   /**
    * terminates and disposes this process.
    * @returns {void}
@@ -169,7 +176,9 @@ class Server extends  events.EventEmitter implements IServer {
   private handlePing() : void {
     switch(this.state) {
       case "started":
-        this.clients.forEach(client => client.write("ping")); 
+        Object.keys(this.clients).forEach(key => {
+          this.clients[key].write("ping"); 
+        })
         break;
       default: 
       break;
@@ -253,10 +262,10 @@ class Server extends  events.EventEmitter implements IServer {
       response.setHeader('Content-Type', 'text/html; charset=utf-8');
       response.setHeader('Transfer-Encoding', 'chunked');
       response.write    ("established");
-      this.clients.push(response);
-      (<any>request).connection.on("end", () => {
-        let index = this.clients.indexOf(response)
-        if(index !== -1) this.clients = this.clients.splice(index, 1)
+      let id = uuid.u4();
+      this.clients[id] = response;
+      (<any>request).connection.on("close", () => {
+        delete this.clients[id]
       })
   }
 
@@ -303,7 +312,7 @@ class Server extends  events.EventEmitter implements IServer {
       case "/__signal_script": 
         this.handleSignalScript(request, response)
         break;
-      default: 
+      default:
         this.emit("request", { url: request.url, method: request.method })         
         this.handleStatic (request, response)    
         break;
