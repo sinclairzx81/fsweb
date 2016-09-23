@@ -1,5 +1,5 @@
 
-fsrun - run and restart OS processes on file system watch events.
+fsweb - static http server with live reload.
 
 The MIT License (MIT)
 
