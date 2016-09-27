@@ -192,7 +192,7 @@ class Server extends  events.EventEmitter implements IServer {
    * @returns {void}
    */
   private handle404(request: http.ServerRequest, response: http.ServerResponse, path: string): void {
-    response.writeHead(404, {"contentType": "text/plain"})
+    response.writeHead(404, {"Content-Type": "text/plain"})
     response.write("404 not found")
     response.end()
   }
@@ -204,7 +204,7 @@ class Server extends  events.EventEmitter implements IServer {
    * @returns {void}
    */
   private handle403(request: http.ServerRequest, response: http.ServerResponse, path: string): void {
-    response.writeHead(403, {"contentType": "text/plain"})
+    response.writeHead(403, {"Content-Type": "text/plain"})
     response.write("403 forbidden")
     response.end()
   }
@@ -219,7 +219,7 @@ class Server extends  events.EventEmitter implements IServer {
   private handleHtmlDocument(request: http.ServerRequest, response: http.ServerResponse, path: string, contentType: string) : void {
       response.writeHead(200, { "Content-Type":  contentType});
       fs.readFile(path, "utf8", (error, content) => {
-          let script = '<script type="text/javascript" src="./__signal_script"></script>'
+          let script = '<script type="text/javascript" src="./__reload"></script>'
           content = [content, script].join("\n")
           response.end(content, "utf-8");
       })
@@ -244,9 +244,9 @@ class Server extends  events.EventEmitter implements IServer {
    * @param {http.ServerResponse} the http response.
    * @returns {void}
    */
-  private handleSignalScript(request: http.ServerRequest, response: http.ServerResponse) : void {
-    response.writeHead(200, {"contentType": "text/javascript"})
-    response.write(assets.signal_script())
+  private handleReloadScript(request: http.ServerRequest, response: http.ServerResponse) : void {
+    response.writeHead(200, {"Content-Type": "text/javascript"})
+    response.write(assets.reload_script())
     response.end()
   }
 
@@ -258,10 +258,14 @@ class Server extends  events.EventEmitter implements IServer {
    * @returns {void}
    */
   private handleSignalClient(request: http.ServerRequest, response: http.ServerResponse) : void {
-      response.setHeader('Connection', 'Transfer-Encoding');
-      response.setHeader('Content-Type', 'text/html; charset=utf-8');
-      response.setHeader('Transfer-Encoding', 'chunked');
-      response.write    ("established");
+      response.setHeader('Connection',        "Transfer-Encoding")
+      response.setHeader('Content-Type',      "text/html; charset=utf-8")
+      response.setHeader('Transfer-Encoding', "chunked")
+      response.setHeader("Cache-Control",     "no-cache, no-store, must-revalidate")
+      response.setHeader("Pragma",            "no-cache")
+      response.setHeader("Expires",           "0")
+      response.statusCode = 200
+      response.write    ("established")
       let id = uuid.u4();
       this.clients[id] = response;
       (<any>request).connection.on("close", () => {
@@ -309,8 +313,8 @@ class Server extends  events.EventEmitter implements IServer {
       case "/__signal": 
         this.handleSignalClient(request, response)
         break;
-      case "/__signal_script": 
-        this.handleSignalScript(request, response)
+      case "/__reload": 
+        this.handleReloadScript(request, response)
         break;
       default:
         this.emit("request", { url: request.url, method: request.method })         

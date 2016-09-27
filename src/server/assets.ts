@@ -27,10 +27,10 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 /**
- * returns the client signal script.
+ * returns the client reload script.
  * @returns {string}
  */
-export function signal_script() : string {
+export function reload_script() : string {
   return `
 window.addEventListener("load", function() {
   /**
@@ -40,13 +40,13 @@ window.addEventListener("load", function() {
    */  
   function handler(signal) {
     switch(signal) {
-      case "established": console.log("signals: established");  break;
+      case "established": console.log("fsweb: established");  break;
       case "reload"     : window.location.reload(); break;
       case "ping"       : break;  
       case "disconnect":
-        console.log("signals: disconnected");
+        console.log("fsweb: disconnected");
         setTimeout(function() {
-          console.log("signals: reconnecting...");
+          console.log("fsweb: reconnecting...");
           connect(handler)
         }, 1000) 
         break;
