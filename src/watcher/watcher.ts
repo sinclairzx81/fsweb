@@ -30,6 +30,36 @@ THE SOFTWARE.
 import * as events  from "events"
 import * as fs      from "fs"
 
+
+/**
+ * Debounce:
+ * 
+ * file system watch debouncer. limits the 
+ * amount of events emitted from a file
+ * system watcher.
+ */
+class Debounce {
+  private handle : NodeJS.Timer
+  constructor(private delay: number) {
+    this.handle = undefined
+  }
+  /**
+   * runs the given function. If the function
+   * is called before this debouncers delay
+   * has elapsed, the event is rerun.
+   * @param {Function} the function to run.
+   * @returns {void}
+   */
+  public set(func: Function): void {
+    if(this.handle !== undefined) {
+      clearTimeout(this.handle)
+    }
+    this.handle = setTimeout(() => {
+      func(); this.handle = undefined;
+    }, this.delay)
+  }
+}
+
 export interface IWatcher {
   on      (event: string,  func: Function)                         : IWatcher 
   on      (event: "data",  func: (data: [string, string]) => void) : IWatcher 
@@ -41,7 +71,7 @@ export interface IWatcher {
 class Watcher extends events.EventEmitter implements IWatcher {
   private state       : "pending" | "started" | "stopped"
   private watcher     : fs.FSWatcher
-  private last_signal : Date
+  private debounce    : Debounce
   /**
    * creates a new watcher.
    * @param {string} the path of the file or directory to watch.
@@ -50,9 +80,9 @@ class Watcher extends events.EventEmitter implements IWatcher {
    */
   constructor(public path: string, private timeout: number) {
     super() 
-    this.state   = "pending"
-    this.watcher = null
-    this.last_signal    = new Date()
+    this.state    = "pending"
+    this.watcher  = null
+    this.debounce = new Debounce(timeout)
   }
   /**
    * starts this watcher.
@@ -62,16 +92,13 @@ class Watcher extends events.EventEmitter implements IWatcher {
     switch(this.state) {
       case "pending": {
         this.state = "started"
-        this.last_signal    = new Date()
-        let options = {recursive: true}
+        let options  = {recursive: true}
         this.watcher = fs.watch(this.path, options, (event, filename) => {
-            let delta = (new Date()).getTime() - this.last_signal.getTime()
-            if(delta > this.timeout && this.state === "started") {
-              this.emit("data", [event, filename])
-              this.last_signal = new Date()
-            }
-          }); 
-          break;
+          this.debounce.set(() => {
+            this.emit("data", [event, filename])
+          })
+        }); 
+        break;
       }
       default:
         this.emit("error", "cannot start a watcher more than once")

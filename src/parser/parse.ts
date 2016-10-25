@@ -131,6 +131,6 @@ export function parse_argument(argv: string[]) : Argument {
   return {
     path     : extract_path(input),
     port     : extract_port(input), 
-    timeout  : 1000
+    timeout  : 100
   }
 }
