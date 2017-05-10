@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/// <reference path="typings/node/node.d.ts" />
+/// <reference path="./typings/node/index.d.ts" />
 
 import {resolve_path, path_exists} from "./sys/sys"
 import {parse_argument}            from "./parser/parse"

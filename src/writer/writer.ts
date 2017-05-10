@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/// <reference path="../typings/node/node.d.ts" />
+
 
 export interface IWriter {
   info  (buffer: string): void

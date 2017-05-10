@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/// <reference path="../typings/node/node.d.ts" />
+
 
 
 import * as events        from "events"
@@ -161,7 +161,7 @@ class Server extends  events.EventEmitter implements IServer {
       case "started":
           this.state = "stopped"
           clearInterval(this.ping_handle)
-          this.server.destroy()
+          this.server.close()
           this.emit("end")
         break;
         case "stopped":
