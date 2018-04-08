@@ -1789,6 +1789,8 @@ export function lookup(filename:string): string {
             return "application/x-director";
         case "wad":
             return "application/x-doom";
+        case "wasm":
+            return "application/wasm";
         case "wav":
             return "audio/x-wav";
         case "wax":
